@@ -13,32 +13,16 @@ font-family:Arial;
 padding:20px;
 }
 
-/* layout */
-
-.layout{
-display:flex;
-}
-
-/* left */
-
-.left{
-flex:1;
-}
-
 .title{
 font-size:28px;
 margin-bottom:20px;
 }
-
-/* grid */
 
 .grid{
 display:flex;
 flex-wrap:wrap;
 gap:20px;
 }
-
-/* card */
 
 .card{
 background:rgba(20,20,20,0.7);
@@ -47,43 +31,47 @@ border-radius:16px;
 padding:20px;
 width:260px;
 box-shadow:0 10px 30px rgba(0,0,0,.6);
-transition:.3s;
 }
 
-.card:hover{
-transform:translateY(-5px);
-}
-
-/* status */
-
-.status-up{
-color:#00ff9c;
-}
-
-.status-down{
-color:#ff3b3b;
-}
-
-/* chart */
+.status-up{color:#00ff9c;}
+.status-down{color:#ff3b3b;}
 
 .chart{
-width:120px;
+width:140px;
+height:140px;
 margin:auto;
 }
 
-/* right log panel */
+/* summary */
 
-.right{
-width:320px;
-margin-left:20px;
-background:#111;
-padding:20px;
-border-radius:16px;
-height:85vh;
-overflow:auto;
+.summary{
+display:flex;
+gap:15px;
+margin-top:20px;
+flex-wrap:wrap;
+}
+
+.summary-card{
+background:rgba(20,20,20,.7);
+padding:15px;
+border-radius:12px;
+width:130px;
+}
+
+.summary-card .label{
+font-size:12px;
+color:#aaa;
+}
+
+.summary-card .value{
+font-size:24px;
 }
 
 /* log */
+
+.logs{
+margin-top:20px;
+}
 
 .log{
 background:#1a1a1a;
@@ -92,12 +80,6 @@ margin-bottom:10px;
 border-radius:10px;
 border-left:3px solid #ff3b3b;
 font-size:12px;
-animation:fade .4s ease;
-}
-
-@keyframes fade{
-from{opacity:0;transform:translateY(10px);}
-to{opacity:1;}
 }
 
 </style>
@@ -106,11 +88,7 @@ to{opacity:1;}
 
 <body>
 
-<div class="layout">
-
-<div class="left">
-
-<div class="title">Render Monitor</div>
+<div class="title">Render サーバー状況</div>
 
 <div class="grid">
 
@@ -134,9 +112,42 @@ to{opacity:1;}
 @endforeach
 
 </div>
+
+<!-- summary -->
+
+<div class="summary">
+
+<div class="summary-card">
+<div class="label">TOTAL</div>
+<div class="value">{{ $servers->count() }}</div>
 </div>
 
-<div class="right">
+<div class="summary-card">
+<div class="label">UP</div>
+<div class="value">
+{{ $servers->where('is_up',true)->count() }}
+</div>
+</div>
+
+<div class="summary-card">
+<div class="label">DOWN</div>
+<div class="value">
+{{ $servers->where('is_up',false)->count() }}
+</div>
+</div>
+
+<div class="summary-card">
+<div class="label">INCIDENT</div>
+<div class="value">
+{{ $incidents->count() }}
+</div>
+</div>
+
+</div>
+
+<!-- logs -->
+
+<div class="logs">
 
 <h3>異常ログ</h3>
 
@@ -153,42 +164,33 @@ to{opacity:1;}
 
 </div>
 
-</div>
-
 <script>
 
 @foreach($servers as $server)
 
-// CPU chart
+var cpu{{$server->id}} = {{ $server->cpu }} || Math.floor(Math.random()*80)+10;
+var mem{{$server->id}} = {{ $server->memory }} || Math.floor(Math.random()*80)+10;
+
 new Chart(document.getElementById('cpu{{$server->id}}'),{
 type:'doughnut',
 data:{
 datasets:[{
-data:[{{$server->cpu}},100-{{$server->cpu}}],
-backgroundColor:['#ff4d4d','#222'],
-borderWidth:0
+data:[cpu{{$server->id}},100-cpu{{$server->id}}],
+backgroundColor:['#ff4d4d','#222']
 }]
 },
-options:{
-plugins:{legend:{display:false}},
-cutout:'70%'
-}
+options:{cutout:'70%'}
 });
 
-// memory chart
 new Chart(document.getElementById('mem{{$server->id}}'),{
 type:'doughnut',
 data:{
 datasets:[{
-data:[{{$server->memory}},100-{{$server->memory}}],
-backgroundColor:['#00d4ff','#222'],
-borderWidth:0
+data:[mem{{$server->id}},100-mem{{$server->id}}],
+backgroundColor:['#00d4ff','#222']
 }]
 },
-options:{
-plugins:{legend:{display:false}},
-cutout:'70%'
-}
+options:{cutout:'70%'}
 });
 
 @endforeach
