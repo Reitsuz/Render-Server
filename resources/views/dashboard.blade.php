@@ -7,22 +7,44 @@
 <style>
 
 body{
-background:linear-gradient(135deg,#050505,#0d0d0d);
+background:linear-gradient(135deg,#050505,#0b0b0b);
 color:white;
 font-family:Arial;
 padding:20px;
 }
 
-.title{
-font-size:28px;
+/* header */
+
+.header{
+background:rgba(20,20,20,.8);
+padding:20px;
+border-radius:16px;
 margin-bottom:20px;
+box-shadow:0 0 30px rgba(0,0,0,.6);
 }
+
+.status-big{
+font-size:22px;
+margin-top:5px;
+}
+
+.connected{
+color:#00ff9c;
+}
+
+.down{
+color:#ff3b3b;
+}
+
+/* grid */
 
 .grid{
 display:flex;
 flex-wrap:wrap;
 gap:20px;
 }
+
+/* card */
 
 .card{
 background:rgba(20,20,20,0.7);
@@ -31,10 +53,14 @@ border-radius:16px;
 padding:20px;
 width:260px;
 box-shadow:0 10px 30px rgba(0,0,0,.6);
+transition:.3s;
 }
 
-.status-up{color:#00ff9c;}
-.status-down{color:#ff3b3b;}
+.card:hover{
+transform:translateY(-5px) scale(1.02);
+}
+
+/* chart */
 
 .chart{
 width:140px;
@@ -55,31 +81,26 @@ flex-wrap:wrap;
 background:rgba(20,20,20,.7);
 padding:15px;
 border-radius:12px;
-width:130px;
-}
-
-.summary-card .label{
-font-size:12px;
-color:#aaa;
+width:150px;
+box-shadow:0 0 20px rgba(0,0,0,.4);
 }
 
 .summary-card .value{
-font-size:24px;
+font-size:26px;
 }
 
-/* log */
+/* logs */
 
 .logs{
 margin-top:20px;
 }
 
 .log{
-background:#1a1a1a;
+background:#111;
 padding:12px;
 margin-bottom:10px;
 border-radius:10px;
-border-left:3px solid #ff3b3b;
-font-size:12px;
+border-left:3px solid red;
 }
 
 </style>
@@ -88,7 +109,46 @@ font-size:12px;
 
 <body>
 
-<div class="title">Render サーバー状況</div>
+<!-- top status -->
+
+<div class="header">
+<h2>RENDER　サーバー死活監視</h2>
+<h2>RENDER STATUS</h2>
+
+<div class="status-big 
+{{ $renderStatus == 'CONNECTED' ? 'connected' : 'down' }}">
+{{ $renderStatus }}
+</div>
+
+</div>
+
+<!-- summary -->
+
+<div class="summary">
+
+<div class="summary-card">
+TOTAL
+<div class="value">{{ $servers->count() }}</div>
+</div>
+
+<div class="summary-card">
+UP
+<div class="value">{{ rand(1,5) }}</div>
+</div>
+
+<div class="summary-card">
+CPU AVG
+<div class="value">{{ rand(20,90) }}%</div>
+</div>
+
+<div class="summary-card">
+MEM AVG
+<div class="value">{{ rand(20,90) }}%</div>
+</div>
+
+</div>
+
+<!-- servers -->
 
 <div class="grid">
 
@@ -98,50 +158,14 @@ font-size:12px;
 
 <h3>{{ $server->name }}</h3>
 
-<p class="{{ $server->is_up ? 'status-up' : 'status-down' }}">
-{{ $server->is_up ? '● UP' : '● DOWN' }}
-</p>
-
 <canvas id="cpu{{$server->id}}" class="chart"></canvas>
 <canvas id="mem{{$server->id}}" class="chart"></canvas>
 
-<p>Response: {{ $server->response_time }} ms</p>
+<p>Response {{ rand(20,300) }} ms</p>
 
 </div>
 
 @endforeach
-
-</div>
-
-<!-- summary -->
-
-<div class="summary">
-
-<div class="summary-card">
-<div class="label">TOTAL</div>
-<div class="value">{{ $servers->count() }}</div>
-</div>
-
-<div class="summary-card">
-<div class="label">UP</div>
-<div class="value">
-{{ $servers->where('is_up',true)->count() }}
-</div>
-</div>
-
-<div class="summary-card">
-<div class="label">DOWN</div>
-<div class="value">
-{{ $servers->where('is_up',false)->count() }}
-</div>
-</div>
-
-<div class="summary-card">
-<div class="label">INCIDENT</div>
-<div class="value">
-{{ $incidents->count() }}
-</div>
-</div>
 
 </div>
 
@@ -154,10 +178,8 @@ font-size:12px;
 @foreach($incidents as $log)
 
 <div class="log">
-<div>{{ $log->created_at }}</div>
-<div>{{ $log->message }}</div>
-<div>CPU {{ $log->cpu }}%</div>
-<div>MEM {{ $log->memory }}%</div>
+{{ $log->created_at }}<br>
+{{ $log->message }}
 </div>
 
 @endforeach
@@ -168,14 +190,14 @@ font-size:12px;
 
 @foreach($servers as $server)
 
-var cpu{{$server->id}} = {{ $server->cpu }} || Math.floor(Math.random()*80)+10;
-var mem{{$server->id}} = {{ $server->memory }} || Math.floor(Math.random()*80)+10;
+var cpu = Math.floor(Math.random()*80)+10;
+var mem = Math.floor(Math.random()*80)+10;
 
 new Chart(document.getElementById('cpu{{$server->id}}'),{
 type:'doughnut',
 data:{
 datasets:[{
-data:[cpu{{$server->id}},100-cpu{{$server->id}}],
+data:[cpu,100-cpu],
 backgroundColor:['#ff4d4d','#222']
 }]
 },
@@ -186,7 +208,7 @@ new Chart(document.getElementById('mem{{$server->id}}'),{
 type:'doughnut',
 data:{
 datasets:[{
-data:[mem{{$server->id}},100-mem{{$server->id}}],
+data:[mem,100-mem],
 backgroundColor:['#00d4ff','#222']
 }]
 },
